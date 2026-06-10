@@ -43,9 +43,14 @@ jobs:
 
   deploy-dev:
     needs: build-and-push
-    runs-on: [self-hosted, prism-deploy]
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
     steps:
-      - name: Deploy prism-visualiser to VM 212
+      - name: Trigger deploy on prism monorepo
         run: |
-          ssh -o BatchMode=yes prism-dev 'set -euo pipefail; cd /opt/prism; docker compose -f docker-compose.dev.yml pull prism-visualiser; docker compose -f docker-compose.dev.yml up -d prism-visualiser; docker compose -f docker-compose.dev.yml ps prism-visualiser'
+          echo '{"event_type":"deploy-dev-service","client_payload":{"service":"prism-visualiser"}}' \
+            | gh api repos/REBUS-Industries/prism/dispatches --method POST --input -
+        env:
+          GH_TOKEN: ${{ secrets.PRISM_DISPATCH_TOKEN }}
