@@ -18,6 +18,7 @@ COPY --from=builder /build/node_modules ./node_modules
 COPY --from=builder /build/dist ./dist
 
 ENV NODE_ENV=production
+ENV MIGRATIONS_DIR=/prism-visualiser/node_modules/@rebus-industries/prism-shared/src/db/migrations
 ENV PORT=8768
 
 EXPOSE 8768
