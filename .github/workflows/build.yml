@@ -1,0 +1,52 @@
+name: visualiser-image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'Dockerfile'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/rebus-industries/prism-visualiser-service
+          tags: |
+            type=ref,event=branch
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            PACKAGES_READ_TOKEN=${{ secrets.PACKAGES_READ_TOKEN }}
+
+  deploy-dev:
+    needs: build-and-push
+    runs-on: [self-hosted, prism-deploy]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Deploy prism-visualiser to VM 212
+        run: |
+          ssh -o BatchMode=yes prism-dev 'set -euo pipefail; cd /opt/prism; docker compose -f docker-compose.dev.yml pull prism-visualiser; docker compose -f docker-compose.dev.yml up -d prism-visualiser; docker compose -f docker-compose.dev.yml ps prism-visualiser'
