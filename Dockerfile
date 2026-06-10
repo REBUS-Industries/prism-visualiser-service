@@ -1,9 +1,9 @@
 FROM node:22-alpine AS builder
 WORKDIR /build
 
-ARG PACKAGES_READ_TOKEN
+ARG GITHUB_TOKEN
 RUN echo "@rebus-industries:registry=https://npm.pkg.github.com" >> /root/.npmrc && \
-    echo "//npm.pkg.github.com/:_authToken=${PACKAGES_READ_TOKEN}" >> /root/.npmrc
+    echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> /root/.npmrc
 
 COPY package.json package-lock.json* ./
 RUN npm ci --no-audit --no-fund
@@ -15,9 +15,9 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /prism-visualiser
 
-ARG PACKAGES_READ_TOKEN
+ARG GITHUB_TOKEN
 RUN echo "@rebus-industries:registry=https://npm.pkg.github.com" >> /root/.npmrc && \
-    echo "//npm.pkg.github.com/:_authToken=${PACKAGES_READ_TOKEN}" >> /root/.npmrc
+    echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> /root/.npmrc
 
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force && rm /root/.npmrc
