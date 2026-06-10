@@ -1,13 +1,9 @@
 FROM node:22-alpine AS builder
 WORKDIR /build
 
-ARG PACKAGES_READ_TOKEN
-RUN echo "@rebus-industries:registry=https://npm.pkg.github.com" >> /root/.npmrc && \
-    echo "//npm.pkg.github.com/:_authToken=${PACKAGES_READ_TOKEN}" >> /root/.npmrc
-
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* rebus-industries-prism-shared-1.0.0.tgz ./
 RUN npm ci --no-audit --no-fund
-RUN npm prune --omit=dev && rm /root/.npmrc
+RUN npm prune --omit=dev
 
 COPY tsconfig.json ./
 COPY src ./src

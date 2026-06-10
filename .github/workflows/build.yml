@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'package.json'
       - 'Dockerfile'
+      - '*.tgz'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -39,8 +40,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            PACKAGES_READ_TOKEN=${{ secrets.PACKAGES_READ_TOKEN }}
 
   deploy-dev:
     needs: build-and-push
